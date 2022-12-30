@@ -1,10 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:flutter_zoom_clone/models/data_store.dart';
+import 'package:flutter_zoom_clone/services/meet_kit.dart';
 import 'package:flutter_zoom_clone/screens/meeting_screen.dart';
-import 'package:flutter_zoom_clone/services/join_service.dart';
-import 'package:flutter_zoom_clone/services/sdk_initializer.dart';
+import 'package:hmssdk_flutter/hmssdk_flutter.dart';
+// import 'package:flutter_zoom_clone/models/data_store.dart';
+// import 'package:flutter_zoom_clone/screens/meeting_screen.dart';
+// import 'package:flutter_zoom_clone/services/join_service.dart';
+// import 'package:flutter_zoom_clone/services/sdk_initializer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -27,26 +30,27 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  @override
-  void initState() {
-    getPermissions();
-    SdkInit.hmssdk.build();
-    super.initState();
-  }
+  // @override
+  // void initState() {
+  //   getPermissions();
+  //   SdkInit.hmssdk.build();
+  //   super.initState();
+  // }
 
   bool _isloading = false;
-  late UserData _datastore;
+  // late UserData _datastore;
 
-  Future<bool> joinRoom() async {
+  Future<bool> joinRoom(String name) async {
     setState(() {
       _isloading = true;
     });
-    bool isJoinSuccessfull = await JoinService.join(SdkInit.hmssdk);
-    if (!isJoinSuccessfull) {
-      return false;
-    }
-    _datastore = UserData();
-    _datastore.startListen();
+    // bool isJoinSuccessfull = await JoinService.join(
+    //     SdkInit.hmssdk, name, "63a2aee7aac408cad8c050b2"); // meet id
+    // // if (!isJoinSuccessfull) {
+    //   return false;
+    // }
+    // _datastore = UserData();
+    // _datastore.startListen();
     setState(() {
       _isloading = false;
     });
@@ -55,6 +59,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String user = "bladfgdfgg";
+
+    void startmeet() {
+      final meetingkit = context.read<MeetingKit>();
+
+      String roomid = "63a2aee7aac408cad8c050b2";
+
+      meetingkit
+          .init()
+          .whenComplete(() => meetingkit.actions.join(user, roomid))
+          .whenComplete(
+            () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: ((context) => MeetingScreen(name: user)),
+              ),
+            ),
+          );
+    }
+
     return SafeArea(
       child: Scaffold(
         backgroundColor: Theme.of(context).primaryColor,
@@ -111,22 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Text('Start an instant meeting'),
                                   ],
                                 ),
-                                onTap: () async {
-                                  bool isJoined = await joinRoom();
-                                  if (isJoined) {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            ListenableProvider.value(
-                                          value: _datastore,
-                                          child: const MeetingScreen(),
-                                        ),
-                                      ),
-                                    );
-                                  } else {
-                                    const SnackBar(content: Text("Error"));
-                                  }
-                                },
+                                onTap: () => startmeet(),
                               ),
                               ListTile(
                                 title: Row(
@@ -163,6 +171,66 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MeetPeerTile extends StatefulWidget {
+  const MeetPeerTile({
+    Key? key,
+    required this.peer,
+  }) : super(key: key);
+
+  final HMSPeer peer;
+
+  @override
+  State<MeetPeerTile> createState() => _MeetPeerTileState();
+}
+
+class _MeetPeerTileState extends State<MeetPeerTile> {
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Stack(
+          fit: StackFit.passthrough,
+          alignment: Alignment.bottomCenter,
+          children: [
+            SizedBox(
+              child: (widget.peer.videoTrack == null ||
+                      widget.peer.videoTrack!.isMute)
+                  ? const Center(
+                      child: Text(
+                        "No Video",
+                        style: TextStyle(fontSize: 10, color: Colors.white),
+                      ),
+                    )
+                  : HMSVideoView(
+                      track: widget.peer.videoTrack!,
+                      scaleType: ScaleType.SCALE_ASPECT_FILL,
+                    ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                margin: EdgeInsets.only(bottom: 5.0),
+                child: Text(
+                  widget.peer.name,
+                  style: TextStyle(
+                      fontSize: 15.0,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white),
+                ),
+              ),
+            ),
           ],
         ),
       ),
