@@ -59,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    String user = "bladfgdfgg";
+    String user = "joining";
 
     void startmeet() {
       final meetingkit = context.read<MeetingKit>();
@@ -158,17 +158,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   child: const Text('New meeting'),
                 ),
-                OutlinedButton(
-                  style: Theme.of(context).outlinedButtonTheme.style!.copyWith(
-                      side: MaterialStateProperty.all(
-                          const BorderSide(color: Colors.white)),
-                      backgroundColor: MaterialStateColor.resolveWith(
-                          (states) => Colors.transparent),
-                      foregroundColor: MaterialStateColor.resolveWith(
-                          (states) => Colors.white)),
-                  onPressed: () {},
-                  child: const Text('Join with a code'),
-                ),
+                // OutlinedButton(
+                //   style: Theme.of(context).outlinedButtonTheme.style!.copyWith(
+                //       side: MaterialStateProperty.all(
+                //           const BorderSide(color: Colors.white)),
+                //       backgroundColor: MaterialStateColor.resolveWith(
+                //           (states) => Colors.transparent),
+                //       foregroundColor: MaterialStateColor.resolveWith(
+                //           (states) => Colors.white)),
+                //   onPressed: () {},
+                //   child: const Text('Join with a code'),
+                // ),
               ],
             )
           ],

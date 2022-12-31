@@ -15,7 +15,6 @@ class MeetingScreen extends StatefulWidget {
 class _MeetingScreenState extends State<MeetingScreen> {
   bool isLocalAudioOn = true;
   bool isLocalVideoOn = true;
-  bool _isLoading = false;
   Offset position = const Offset(10, 10);
 
   Future<bool> leaveRoom() async {
@@ -34,6 +33,14 @@ class _MeetingScreenState extends State<MeetingScreen> {
   @override
   Widget build(BuildContext context) {
     final meetingkit = context.watch<MeetingKit>();
+
+    HMSPeer localpeer;
+
+    for (HMSPeer each in meetingkit.allPeers) {
+      if (each.isLocal) {
+        localpeer = each;
+      }
+    }
     return WillPopScope(
       onWillPop: () async {
         return leaveRoom();
@@ -73,38 +80,40 @@ class _MeetingScreenState extends State<MeetingScreen> {
                       ),
                       GestureDetector(
                         onTap: () => {
-                          // SdkInit.hmssdk.switchVideo(isOn: widget.isLocalVideoOn),
-                          // if (!widget.isLocalVideoOn)
-                          //   SdkInit.hmssdk.startCapturing()
-                          // else
-                          //   SdkInit.hmssdk.stopCapturing(),
-                          // setState(() {
-                          //   widget.isLocalVideoOn = !widget.isLocalVideoOn;
-                          // })
+                          meetingkit.actions.sdk
+                              .switchVideo(isOn: isLocalVideoOn),
+                          if (!isLocalVideoOn)
+                            {meetingkit.actions.sdk.startCapturing()}
+                          else
+                            {meetingkit.actions.sdk.stopCapturing()},
+                          setState(() {
+                            isLocalVideoOn = !isLocalVideoOn;
+                          }),
                         },
                         child: CircleAvatar(
                           radius: 25,
                           backgroundColor: Colors.transparent.withOpacity(0.2),
                           child: Icon(
-                            // widget.isLocalVideoOn
-                            true ? Icons.videocam : Icons.videocam_off_rounded,
+                            isLocalVideoOn
+                                ? Icons.videocam
+                                : Icons.videocam_off_rounded,
                             color: Colors.white,
                           ),
                         ),
                       ),
                       GestureDetector(
                         onTap: () => {
-                          // SdkInit.hmssdk.switchAudio(isOn: widget.isLocalAudioOn),
-                          // setState(() {
-                          //   widget.isLocalAudioOn = !widget.isLocalAudioOn;
-                          // })
+                          meetingkit.actions.sdk
+                              .switchAudio(isOn: isLocalAudioOn),
+                          setState(() {
+                            isLocalAudioOn = !isLocalAudioOn;
+                          })
                         },
                         child: CircleAvatar(
                           radius: 25,
                           backgroundColor: Colors.transparent.withOpacity(0.2),
                           child: Icon(
-                            // widget.isLocalAudioOn
-                            true ? Icons.mic : Icons.mic_off,
+                            isLocalAudioOn ? Icons.mic : Icons.mic_off,
                             color: Colors.white,
                           ),
                         ),
@@ -119,9 +128,9 @@ class _MeetingScreenState extends State<MeetingScreen> {
                 right: 10,
                 child: GestureDetector(
                   onTap: () {
-                    // if (widget.isLocalVideoOn) {
-
-                    // }
+                    if (isLocalVideoOn) {
+                      meetingkit.actions.sdk.switchCamera();
+                    }
                   },
                   child: CircleAvatar(
                     radius: 25,
@@ -159,10 +168,9 @@ class MeetUI extends StatelessWidget {
       width: size.width,
       // color: Colors.green,
       child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200,
-            mainAxisSpacing: 10.0,
-            crossAxisSpacing: 20.0),
+        scrollDirection: Axis.horizontal,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 1, mainAxisSpacing: 10.0, crossAxisSpacing: 10.0),
         itemCount: meetingkit.allPeers.length,
         itemBuilder: ((context, index) => MeetPeerTile(
               peer: current[index],
